@@ -1,0 +1,1184 @@
+import HeroSection from "./components/HeroSection"
+import { useState, useEffect } from 'react'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type MomentId = 'transform' | 'care' | 'change' | 'event' | 'selfcare'
+type GalleryFilter = 'todos' | 'loiros' | 'morenas' | 'cortes' | 'transformacoes' | 'tratamentos' | 'eventos'
+
+interface Experience {
+  id: string
+  name: string
+  tag: string
+  tagline: string
+  description: string
+  photo: string
+}
+
+interface GalleryItem {
+  id: number
+  photo: string
+  category: string
+  tall: boolean
+  label: string
+  technique: string
+  professional: string
+}
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+const EXPERIENCES: Experience[] = [
+  {
+    id: 'blonde',
+    name: 'Tria Blonde',
+    tag: 'Transformação',
+    tagline: 'Transformação e iluminação.',
+    description:
+      'Uma experiência pensada para quem deseja iluminar, transformar e manter a saúde dos fios com técnicas exclusivas de colorimetria.',
+    photo: '1554342872-034a06541bad',
+  },
+  {
+    id: 'care',
+    name: 'Tria Care',
+    tag: 'Cuidado',
+    tagline: 'Cuidado e saúde dos fios.',
+    description:
+      'Tratamentos profundos que restauram, nutrem e devolvem a vitalidade de cada fio com protocolos personalizados.',
+    photo: '1560066984-138dadb4c035',
+  },
+  {
+    id: 'signature',
+    name: 'Tria Signature',
+    tag: 'Exclusivo',
+    tagline: 'O melhor da casa.',
+    description:
+      'Os serviços mais icônicos do Tria Salon, desenvolvidos para realçar a sua beleza única com refinamento e precisão.',
+    photo: '1519345182560-3f2917c472ef',
+  },
+  {
+    id: 'bride',
+    name: 'Tria Bride',
+    tag: 'Especial',
+    tagline: 'Para momentos inesquecíveis.',
+    description:
+      'Uma experiência completa e exclusiva para noivas e ocasiões especiais que merecem ser lembradas para sempre.',
+    photo: '1487412720507-e7ab37603c6f',
+  },
+]
+
+const MOMENT_MAP: Record<MomentId, string[]> = {
+  transform: ['blonde', 'signature'],
+  care: ['care', 'signature'],
+  change: ['blonde', 'care'],
+  event: ['bride', 'signature'],
+  selfcare: ['care', 'blonde'],
+}
+
+const MOMENTS: { id: MomentId; label: string; sub: string }[] = [
+  { id: 'transform', label: 'Quero transformar', sub: 'Uma mudança que vai surpreender' },
+  { id: 'care', label: 'Quero cuidar', sub: 'Saúde e vitalidade para os fios' },
+  { id: 'change', label: 'Quero mudar', sub: 'Um novo visual, uma nova versão' },
+  { id: 'event', label: 'Tenho um evento', sub: 'Para o momento mais especial' },
+  { id: 'selfcare', label: 'Quero me cuidar', sub: 'Um momento só seu' },
+]
+
+const QUIZ_STEPS = [
+  {
+    question: 'O que você deseja viver hoje?',
+    options: [
+      { label: 'Uma grande transformação', result: 'blonde' },
+      { label: 'Cuidado e regeneração', result: 'care' },
+      { label: 'Algo sofisticado e atemporal', result: 'signature' },
+      { label: 'Me preparar para algo especial', result: 'bride' },
+    ],
+  },
+  {
+    question: 'Como estão seus fios agora?',
+    options: [
+      { label: 'Precisam de uma nova vida', result: '' },
+      { label: 'Bem, mas quero mais brilho', result: '' },
+      { label: 'Precisam de tratamento urgente', result: '' },
+      { label: 'Ótimos — quero mantê-los assim', result: '' },
+    ],
+  },
+  {
+    question: 'Qual sensação você quer levar daqui?',
+    options: [
+      { label: 'Completamente renovada', result: '' },
+      { label: 'Radiante e luminosa', result: '' },
+      { label: 'Poderosa e confiante', result: '' },
+      { label: 'Especial e inesquecível', result: '' },
+    ],
+  },
+]
+
+const PROFESSIONALS = [
+  {
+    name: 'Ana Beatriz',
+    role: 'Colorista Sênior',
+    specialty: 'Loiros · Balayage · Iluminação',
+    bio: 'Com 12 anos de experiência, Ana transforma cada fio com precisão e sensibilidade. Especialista em loiros naturais e técnicas de iluminação francesa.',
+    photo: '1529626455594-4ff0802cfb7e',
+  },
+  {
+    name: 'Carla Mendes',
+    role: 'Stylist & Cortes',
+    specialty: 'Cortes Geométricos · Finalização',
+    bio: 'Apaixonada por formas e movimento, Carla cria cortes que se adaptam à sua rotina e realçam o melhor de cada rosto.',
+    photo: '1534528741775-53994a69daeb',
+  },
+  {
+    name: 'Renata Oliveira',
+    role: 'Especialista em Tratamentos',
+    specialty: 'Restauração · Saúde Capilar',
+    bio: 'Renata escuta, diagnostica e cria protocolos únicos para transformar a sua relação com os fios. Cada visita começa com uma conversa.',
+    photo: '1544717305-2604a8e84e42',
+  },
+]
+
+const GALLERY: GalleryItem[] = [
+  { id: 1, photo: '1522337360788-8b13dee7a37e', category: 'loiros', tall: true, label: 'Loiro Acinzentado', technique: 'Balayage + Matização', professional: 'Ana Beatriz' },
+  { id: 2, photo: '1554342872-034a06541bad', category: 'loiros', tall: false, label: 'Golden Blonde', technique: 'Iluminação Francesa', professional: 'Ana Beatriz' },
+  { id: 3, photo: '1560066984-138dadb4c035', category: 'tratamentos', tall: false, label: 'Reconstrução Intensiva', technique: 'Tratamento Profundo', professional: 'Renata Oliveira' },
+  { id: 4, photo: '1519345182560-3f2917c472ef', category: 'morenas', tall: true, label: 'Morena Iluminada', technique: 'Ombre Natural', professional: 'Ana Beatriz' },
+  { id: 5, photo: '1487412720507-e7ab37603c6f', category: 'eventos', tall: false, label: 'Noiva Radiante', technique: 'Tria Bride', professional: 'Carla Mendes' },
+  { id: 6, photo: '1547425260-76bcadfb4f2c', category: 'cortes', tall: false, label: 'Bob Estruturado', technique: 'Corte + Finalização', professional: 'Carla Mendes' },
+  { id: 7, photo: '1521590832167-7bcbfaa6381f', category: 'transformacoes', tall: true, label: 'Transformação Completa', technique: 'Colorimetria + Corte', professional: 'Ana Beatriz' },
+  { id: 8, photo: '1595476108010-b4d1f102b1b1', category: 'loiros', tall: false, label: 'Loiro Platinado', technique: 'Descoloração + Tônico', professional: 'Ana Beatriz' },
+]
+
+const UNIVERSO = [
+  { title: 'O espaço que criamos para você', sub: 'Ambiente', photo: '1562322140-8baeececf3df' },
+  { title: 'Os produtos que selecionamos com cuidado', sub: 'Produtos', photo: '1581824043583-6904b080a19c' },
+  { title: 'A história de como o Tria nasceu', sub: 'História', photo: '1616394584738-fc6e612e71b9' },
+]
+
+const DIARY = [
+  { title: 'Como cuidar do seu loiro depois da transformação', category: 'Cuidados', time: '5 min', photo: '1554342872-034a06541bad' },
+  { title: 'Como saber se é hora de mudar o corte', category: 'Tendências', time: '4 min', photo: '1521590832167-7bcbfaa6381f' },
+  { title: 'O que fazer antes de uma grande transformação', category: 'Preparação', time: '6 min', photo: '1519345182560-3f2917c472ef' },
+]
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const img = (id: string, w = 800, h = 600) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&auto=format&q=80`
+
+function useScrollAnimation() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -48px 0px' }
+    )
+    document.querySelectorAll('[data-animate]').forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  })
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+function IconInstagram({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function IconArrowRight({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function IconChevronRight({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function IconUpload({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function IconWhatsApp({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.124 1.522 5.858L.044 23.956a.5.5 0 00.612.608l6.285-1.648A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.95 9.95 0 01-5.089-1.392l-.364-.217-3.733.979.994-3.64-.239-.378A9.97 9.97 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+    </svg>
+  )
+}
+
+// ─── Label ────────────────────────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] tracking-[0.35em] uppercase text-gold mb-5 font-medium">
+      {children}
+    </p>
+  )
+}
+
+// ─── CTA Button ───────────────────────────────────────────────────────────────
+function CTAPrimary({ children, href = '#agendar', className = '' }: { children: React.ReactNode; href?: string; className?: string }) {
+  return (
+    <a
+      href={href}
+      className={`inline-block text-[10px] tracking-[0.25em] uppercase bg-gold text-canvas px-8 py-4 font-medium hover:bg-gold-light transition-colors duration-300 ${className}`}
+    >
+      {children}
+    </a>
+  )
+}
+
+function CTAOutline({ children, href = '#', className = '' }: { children: React.ReactNode; href?: string; className?: string }) {
+  return (
+    <a
+      href={href}
+      className={`inline-block text-[10px] tracking-[0.25em] uppercase border border-white/15 text-cream px-8 py-4 hover:border-white/35 transition-colors duration-300 ${className}`}
+    >
+      {children}
+    </a>
+  )
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+function Header({ scrolled, menuOpen, setMenuOpen }: { scrolled: boolean; menuOpen: boolean; setMenuOpen: (v: boolean) => void }) {
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? 'bg-canvas/95 backdrop-blur-md border-b border-white/[0.05]'
+          : 'bg-transparent'
+      }`}
+    >
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between h-16 md:h-20">
+        <a href="#" className="font-display text-base tracking-[0.25em] text-cream uppercase">
+          Tria Salon
+        </a>
+
+        <nav className="hidden md:flex items-center gap-10">
+          {[
+            { label: 'Experiências', href: '#experiencias' },
+            { label: 'Inspirações', href: '#inspiracoes' },
+            { label: 'Profissionais', href: '#profissionais' },
+            { label: 'Universo Tria', href: '#universo' },
+          ].map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className="text-[10px] tracking-[0.18em] uppercase text-warm hover:text-cream transition-colors duration-300"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="hidden md:flex items-center gap-5">
+          <a
+            href="https://www.instagram.com/_triasalon/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted hover:text-cream transition-colors duration-300"
+            aria-label="Instagram Tria Salon"
+          >
+            <IconInstagram size={17} />
+          </a>
+          <a
+            href="#agendar"
+            className="text-[10px] tracking-[0.2em] uppercase border border-gold/50 text-gold px-6 py-2.5 hover:bg-gold hover:text-canvas transition-all duration-300"
+          >
+            Agendar experiência
+          </a>
+        </div>
+
+        <button
+          className="md:hidden text-cream p-1"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu"
+        >
+          {menuOpen ? (
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {menuOpen && (
+        <div className="md:hidden bg-canvas/98 backdrop-blur-md border-t border-white/[0.05] px-6 py-8 flex flex-col gap-6">
+          {[
+            { label: 'Experiências', href: '#experiencias' },
+            { label: 'Inspirações', href: '#inspiracoes' },
+            { label: 'Profissionais', href: '#profissionais' },
+            { label: 'Universo Tria', href: '#universo' },
+          ].map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className="text-[11px] tracking-[0.18em] uppercase text-warm hover:text-cream transition-colors"
+              onClick={() => setMenuOpen(false)}
+            >
+              {item.label}
+            </a>
+          ))}
+          <a
+            href="https://www.instagram.com/_triasalon/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-muted hover:text-cream transition-colors"
+          >
+            <IconInstagram size={14} />
+            Instagram
+          </a>
+          <CTAPrimary href="#agendar" className="text-center mt-2">
+            Agendar experiência
+          </CTAPrimary>
+        </div>
+      )}
+    </header>
+  )
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function HeroSection() {
+  return (
+    <section className="relative min-h-screen flex items-end overflow-hidden bg-canvas">
+      <div className="absolute inset-0">
+        <img
+          src={img('1522337360788-8b13dee7a37e', 1800, 1200)}
+          alt="Tria Salon — experiência premium de beleza"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/50 to-canvas/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-canvas/70 via-canvas/30 to-transparent" />
+      </div>
+
+      <div className="relative max-w-[1400px] mx-auto px-6 md:px-12 w-full pb-20 md:pb-32">
+        <div className="max-w-2xl">
+          <p
+            className="text-[10px] tracking-[0.4em] uppercase text-gold mb-7 opacity-0 animate-[fadeUp_0.8s_0.3s_ease_forwards]"
+            style={{ animation: 'fadeUp 0.9s 0.2s cubic-bezier(0.16,1,0.3,1) forwards' }}
+          >
+            Tria Experience — Rio de Janeiro
+          </p>
+          <h1
+            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[88px] text-cream leading-[0.92] mb-8 opacity-0"
+            style={{ animation: 'fadeUp 0.9s 0.4s cubic-bezier(0.16,1,0.3,1) forwards' }}
+          >
+            Seu momento<br />
+            <em>começa aqui.</em>
+          </h1>
+          <p
+            className="text-warm text-lg md:text-xl leading-relaxed mb-10 max-w-md opacity-0"
+            style={{ animation: 'fadeUp 0.9s 0.6s cubic-bezier(0.16,1,0.3,1) forwards' }}
+          >
+            Mais do que transformar cabelos, criamos experiências para você se sentir ainda mais você.
+          </p>
+          <div
+            className="flex flex-col sm:flex-row gap-4 opacity-0"
+            style={{ animation: 'fadeUp 0.9s 0.75s cubic-bezier(0.16,1,0.3,1) forwards' }}
+          >
+            <CTAPrimary href="#momento">Descobrir minha experiência</CTAPrimary>
+            <CTAOutline href="#inspiracoes">Ver inspirações</CTAOutline>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-8 right-8 md:right-12 hidden md:flex items-center gap-3 text-muted">
+        <span className="text-[9px] tracking-[0.25em] uppercase">Role para explorar</span>
+        <div className="w-12 h-px bg-muted/60" />
+      </div>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(28px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </section>
+  )
+}
+
+// ─── Find Your Moment ─────────────────────────────────────────────────────────
+function FindMomentSection() {
+  const [selected, setSelected] = useState<MomentId | null>(null)
+
+  const filtered = selected ? EXPERIENCES.filter((e) => MOMENT_MAP[selected].includes(e.id)) : []
+
+  return (
+    <section id="momento" className="py-24 md:py-40 max-w-[1400px] mx-auto px-6 md:px-12">
+      <div data-animate className="mb-14 md:mb-18">
+        <SectionLabel>Encontre seu momento</SectionLabel>
+        <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05] mb-5">
+          Cada mulher chega com<br className="hidden md:block" /> um desejo diferente.
+        </h2>
+        <p className="text-warm text-lg max-w-sm">Encontre a experiência que combina com você.</p>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-14" data-animate data-animate-delay="1">
+        {MOMENTS.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => setSelected(selected === m.id ? null : m.id)}
+            className={`flex flex-col items-start px-6 py-4 border transition-all duration-350 text-left ${
+              selected === m.id
+                ? 'border-gold bg-gold/[0.08] text-gold'
+                : 'border-white/10 hover:border-white/22 text-cream'
+            }`}
+          >
+            <span className="text-sm font-medium tracking-wide">{m.label}</span>
+            <span className="text-[11px] text-muted mt-0.5">{m.sub}</span>
+          </button>
+        ))}
+      </div>
+
+      {selected && filtered.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {filtered.map((exp) => (
+            <div key={exp.id} className="group relative overflow-hidden bg-panel cursor-pointer">
+              <div className="relative h-72 md:h-80 overflow-hidden">
+                <img
+                  src={img(exp.photo, 800, 600)}
+                  alt={exp.name}
+                  className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-canvas/85 via-canvas/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6">
+                  <p className="text-[9px] tracking-[0.35em] uppercase text-gold mb-2">{exp.tagline}</p>
+                  <h3 className="font-display text-2xl md:text-3xl text-cream">{exp.name}</h3>
+                </div>
+              </div>
+              <div className="p-6 flex items-start justify-between gap-4 bg-panel">
+                <p className="text-warm text-sm leading-relaxed">{exp.description.slice(0, 90)}…</p>
+                <a href="#agendar" className="flex-shrink-0 text-[9px] tracking-[0.2em] uppercase text-gold hover:text-gold-light transition-colors flex items-center gap-1.5 mt-0.5">
+                  Conhecer <IconChevronRight />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+function TriaQuizSection() {
+  const [step, setStep] = useState<'idle' | 1 | 2 | 3 | 'result'>('idle')
+  const [resultId, setResultId] = useState<string>('blonde')
+
+  const handleAnswer = (result?: string) => {
+    if (step === 'idle') return
+    if (step === 1) {
+      if (result) setResultId(result)
+      setStep(2)
+    } else if (step === 2) {
+      setStep(3)
+    } else if (step === 3) {
+      setStep('result')
+    }
+  }
+
+  const currentStepNum = step === 'idle' ? 0 : step === 'result' ? 4 : (step as number)
+  const quiz = QUIZ_STEPS[Math.max(0, currentStepNum - 1)]
+  const resultExp = EXPERIENCES.find((e) => e.id === resultId) || EXPERIENCES[0]
+
+  return (
+    <section className="py-24 md:py-40 bg-panel">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        <div className="max-w-xl mx-auto text-center" data-animate>
+          <SectionLabel>Descoberta</SectionLabel>
+          <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05] mb-4">
+            Qual é o seu Tria?
+          </h2>
+          <p className="text-warm text-lg">
+            Algumas escolhas dizem muito sobre o que você deseja viver.
+          </p>
+        </div>
+
+        <div className="mt-16 max-w-lg mx-auto">
+          {step === 'idle' && (
+            <div className="text-center" data-animate data-animate-delay="2">
+              <button
+                onClick={() => setStep(1)}
+                className="text-[10px] tracking-[0.25em] uppercase border border-gold/50 text-gold px-12 py-4 hover:bg-gold hover:text-canvas transition-all duration-300"
+              >
+                Descobrir meu Tria
+              </button>
+            </div>
+          )}
+
+          {(step === 1 || step === 2 || step === 3) && (
+            <div data-animate>
+              <div className="flex gap-2 mb-10">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className={`h-px flex-1 transition-all duration-600 ${
+                      n <= currentStepNum ? 'bg-gold' : 'bg-white/10'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted mb-5">
+                {currentStepNum} de 3
+              </p>
+              <h3 className="font-display text-3xl md:text-4xl text-cream mb-10 leading-tight">
+                {quiz.question}
+              </h3>
+
+              <div className="flex flex-col gap-3">
+                {quiz.options.map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleAnswer(opt.result || undefined)}
+                    className="flex items-center justify-between px-6 py-4 border border-white/10 text-left hover:border-gold/40 hover:bg-gold/[0.06] transition-all duration-300 group"
+                  >
+                    <span className="text-cream text-sm font-light">{opt.label}</span>
+                    <IconChevronRight size={15} />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => { setStep('idle') }}
+                className="mt-8 text-[10px] tracking-[0.2em] uppercase text-muted hover:text-warm transition-colors"
+              >
+                ← Recomeçar
+              </button>
+            </div>
+          )}
+
+          {step === 'result' && (
+            <div className="text-center" data-animate>
+              <p className="text-[10px] tracking-[0.35em] uppercase text-gold mb-6">
+                Seu momento combina com:
+              </p>
+              <div className="relative overflow-hidden mb-8 bg-panel2">
+                <img
+                  src={img(resultExp.photo, 900, 450)}
+                  alt={resultExp.name}
+                  className="w-full h-52 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-canvas/80 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6 text-left">
+                  <h3 className="font-display text-3xl text-cream">{resultExp.name}</h3>
+                  <p className="text-gold text-[10px] tracking-[0.2em] uppercase mt-1">{resultExp.tagline}</p>
+                </div>
+              </div>
+              <p className="text-warm text-base leading-relaxed mb-10 text-left">{resultExp.description}</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <CTAPrimary href="#agendar" className="flex-1 text-center">Quero conhecer</CTAPrimary>
+                <button
+                  onClick={() => { setStep('idle'); setResultId('blonde') }}
+                  className="flex-1 text-[10px] tracking-[0.2em] uppercase border border-white/10 text-muted px-6 py-4 hover:border-white/20 hover:text-warm transition-all duration-300"
+                >
+                  Começar de novo
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Experiences ──────────────────────────────────────────────────────────────
+function ExperiencesSection() {
+  return (
+    <section id="experiencias" className="py-24 md:py-40 max-w-[1400px] mx-auto px-6 md:px-12">
+      <div data-animate className="mb-14">
+        <SectionLabel>Experiências</SectionLabel>
+        <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05]">
+          Experiências Tria
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5" data-animate data-animate-delay="1">
+        {/* Large — Tria Blonde */}
+        <div className="group relative overflow-hidden bg-panel cursor-pointer md:row-span-2">
+          <div className="relative h-72 md:h-full md:min-h-[520px] overflow-hidden">
+            <img
+              src={img('1554342872-034a06541bad', 900, 900)}
+              alt="Tria Blonde"
+              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-8">
+              <p className="text-[9px] tracking-[0.35em] uppercase text-gold mb-3">Transformação</p>
+              <h3 className="font-display text-3xl md:text-4xl text-cream mb-3">Tria Blonde</h3>
+              <p className="text-warm text-sm leading-relaxed max-w-xs mb-6">
+                Transformação e iluminação. Uma experiência pensada para iluminar, transformar e manter a saúde dos fios.
+              </p>
+              <a href="#agendar" className="text-[10px] tracking-[0.2em] uppercase text-gold border-b border-gold/40 pb-1 hover:border-gold transition-colors">
+                Conhecer
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Tria Care */}
+        <div className="group relative overflow-hidden bg-panel cursor-pointer">
+          <div className="relative h-56 md:h-64 overflow-hidden">
+            <img
+              src={img('1560066984-138dadb4c035', 800, 500)}
+              alt="Tria Care"
+              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-canvas/80 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-6 flex items-end justify-between w-full">
+              <div>
+                <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-1">Cuidado</p>
+                <h3 className="font-display text-2xl text-cream">Tria Care</h3>
+              </div>
+              <a href="#agendar" className="text-[10px] tracking-[0.15em] uppercase text-gold hover:text-gold-light transition-colors flex items-center gap-1">
+                Conhecer <IconChevronRight size={13} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Tria Signature */}
+        <div className="group relative overflow-hidden bg-panel cursor-pointer">
+          <div className="relative h-56 md:h-64 overflow-hidden">
+            <img
+              src={img('1519345182560-3f2917c472ef', 800, 500)}
+              alt="Tria Signature"
+              className="w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-canvas/80 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-6 flex items-end justify-between w-full">
+              <div>
+                <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-1">Exclusivo</p>
+                <h3 className="font-display text-2xl text-cream">Tria Signature</h3>
+              </div>
+              <a href="#agendar" className="text-[10px] tracking-[0.15em] uppercase text-gold hover:text-gold-light transition-colors flex items-center gap-1">
+                Conhecer <IconChevronRight size={13} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tria Bride — full width */}
+      <div className="group relative overflow-hidden bg-panel cursor-pointer mt-5" data-animate data-animate-delay="2">
+        <div className="relative h-72 md:h-80 overflow-hidden">
+          <img
+            src={img('1487412720507-e7ab37603c6f', 1600, 700)}
+            alt="Tria Bride"
+            className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-canvas/80 via-canvas/40 to-canvas/10" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 p-8 md:p-12">
+            <p className="text-[9px] tracking-[0.35em] uppercase text-gold mb-4">Para ocasiões especiais</p>
+            <h3 className="font-display text-4xl md:text-5xl text-cream mb-4">Tria Bride</h3>
+            <p className="text-warm text-sm leading-relaxed max-w-sm mb-7">
+              Uma experiência completa e exclusiva para noivas e momentos que merecem ser eternizados.
+            </p>
+            <a href="#agendar" className="text-[10px] tracking-[0.2em] uppercase text-gold border-b border-gold/40 pb-1 hover:border-gold transition-colors">
+              Conhecer
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Want This Result ─────────────────────────────────────────────────────────
+function WantResultSection() {
+  const [dragOver, setDragOver] = useState(false)
+
+  return (
+    <section id="resultado" className="py-24 md:py-40 bg-panel">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-14 md:gap-24 items-center">
+          <div data-animate>
+            <SectionLabel>Sua referência</SectionLabel>
+            <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05] mb-6">
+              Viu um resultado<br />que amou?
+            </h2>
+            <p className="text-warm text-lg leading-relaxed mb-12">
+              Traga sua inspiração. A gente ajuda você a transformar referência em possibilidade.
+            </p>
+
+            <div className="flex flex-col gap-7 mb-12">
+              {[
+                { n: '01', label: 'Envie uma foto de referência' },
+                { n: '02', label: 'Conte o que você deseja' },
+                { n: '03', label: 'Responda algumas perguntas rápidas' },
+                { n: '04', label: 'Entre em contato com o Tria' },
+              ].map((s) => (
+                <div key={s.n} className="flex items-center gap-5">
+                  <span className="font-display text-2xl text-gold/35 w-8 flex-shrink-0">{s.n}</span>
+                  <div className="flex-1 border-b border-white/[0.06] pb-5">
+                    <span className="text-warm text-sm">{s.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="https://wa.me/5521999999999"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 text-[10px] tracking-[0.25em] uppercase bg-gold text-canvas px-8 py-4 font-medium hover:bg-gold-light transition-colors duration-300"
+            >
+              <IconWhatsApp size={16} />
+              Quero esse resultado
+            </a>
+          </div>
+
+          <div data-animate data-animate-delay="2">
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => { e.preventDefault(); setDragOver(false) }}
+              className={`border transition-all duration-400 cursor-pointer ${
+                dragOver ? 'border-gold/60 bg-gold/[0.05]' : 'border-white/[0.09] hover:border-white/18'
+              }`}
+            >
+              <div className="p-12 md:p-16 flex flex-col items-center text-center">
+                <div className="w-14 h-14 border border-white/10 flex items-center justify-center mb-7 text-muted">
+                  <IconUpload size={22} />
+                </div>
+                <p className="text-cream text-sm mb-2 font-light">Arraste sua inspiração aqui</p>
+                <p className="text-muted text-xs tracking-wide">ou clique para selecionar</p>
+                <p className="text-muted text-[11px] mt-3">JPG, PNG, WEBP — até 10MB</p>
+
+                <div className="w-full border-t border-white/[0.06] mt-10 pt-8">
+                  <p className="text-[11px] text-muted mb-3">Você também pode enviar pelo</p>
+                  <a
+                    href="https://www.instagram.com/_triasalon/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-gold hover:text-gold-light transition-colors"
+                  >
+                    <IconInstagram size={13} />
+                    Instagram do Tria
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Gallery ──────────────────────────────────────────────────────────────────
+function GallerySection() {
+  const [filter, setFilter] = useState<GalleryFilter>('todos')
+  const [selected, setSelected] = useState<GalleryItem | null>(null)
+  const [fading, setFading] = useState(false)
+
+  const FILTERS: { id: GalleryFilter; label: string }[] = [
+    { id: 'todos', label: 'Todos' },
+    { id: 'loiros', label: 'Loiros' },
+    { id: 'morenas', label: 'Morenas' },
+    { id: 'cortes', label: 'Cortes' },
+    { id: 'transformacoes', label: 'Transformações' },
+    { id: 'tratamentos', label: 'Tratamentos' },
+    { id: 'eventos', label: 'Eventos' },
+  ]
+
+  const handleFilter = (f: GalleryFilter) => {
+    setFading(true)
+    setTimeout(() => { setFilter(f); setFading(false) }, 280)
+  }
+
+  const items = filter === 'todos' ? GALLERY : GALLERY.filter((i) => i.category === filter)
+
+  return (
+    <section id="inspiracoes" className="py-24 md:py-40 max-w-[1400px] mx-auto px-6 md:px-12">
+      <div data-animate className="mb-12">
+        <SectionLabel>Galeria</SectionLabel>
+        <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05]">
+          Inspirações
+        </h2>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-12" data-animate data-animate-delay="1">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => handleFilter(f.id)}
+            className={`text-[10px] tracking-[0.18em] uppercase px-5 py-2.5 border transition-all duration-300 ${
+              filter === f.id
+                ? 'border-gold text-gold'
+                : 'border-white/10 text-muted hover:border-white/20 hover:text-warm'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div
+        className={`columns-2 md:columns-3 gap-3 md:gap-4 transition-opacity duration-280 ${fading ? 'opacity-0' : 'opacity-100'}`}
+        data-animate data-animate-delay="2"
+      >
+        {items.map((item) => (
+          <div
+            key={item.id}
+            onClick={() => setSelected(item)}
+            className="group relative overflow-hidden bg-panel mb-3 md:mb-4 cursor-pointer break-inside-avoid"
+          >
+            <div className={`relative overflow-hidden ${item.tall ? 'h-80 md:h-[440px]' : 'h-48 md:h-60'}`}>
+              <img
+                src={img(item.photo, 600, item.tall ? 800 : 400)}
+                alt={item.label}
+                className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-canvas/20 group-hover:bg-canvas/50 transition-colors duration-400" />
+              <div className="absolute bottom-0 left-0 p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-400">
+                <p className="text-[9px] tracking-[0.25em] uppercase text-gold mb-1">{item.technique}</p>
+                <p className="text-cream text-sm font-medium">{item.label}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 bg-canvas/96 flex items-center justify-center p-5 md:p-10"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="max-w-2xl w-full bg-panel overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              <img
+                src={img(selected.photo, 900, 600)}
+                alt={selected.label}
+                className="w-full h-72 md:h-96 object-cover"
+              />
+              <button
+                onClick={() => setSelected(null)}
+                className="absolute top-4 right-4 w-9 h-9 bg-canvas/80 flex items-center justify-center text-warm hover:text-cream transition-colors"
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-7 md:p-9">
+              <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-2">{selected.technique}</p>
+              <h3 className="font-display text-3xl text-cream mb-2">{selected.label}</h3>
+              <p className="text-muted text-sm mb-1">Por <span className="text-warm">{selected.professional}</span></p>
+              <p className="text-warm text-sm leading-relaxed mt-4 mb-8">
+                Uma experiência de transformação realizada com dedicação e técnica exclusiva. Cada detalhe pensado para o seu momento único no Tria Salon.
+              </p>
+              <div className="flex items-center justify-between">
+                <CTAPrimary href="#agendar">Quero esse resultado</CTAPrimary>
+                <button onClick={() => setSelected(null)} className="text-[10px] tracking-[0.15em] uppercase text-muted hover:text-warm transition-colors">
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ─── Professionals ────────────────────────────────────────────────────────────
+function ProfessionalsSection() {
+  return (
+    <section id="profissionais" className="py-24 md:py-40 bg-panel">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        <div data-animate className="mb-14 md:mb-20">
+          <SectionLabel>Time</SectionLabel>
+          <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05]">
+            Quem transforma<br className="hidden md:block" /> seu momento
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          {PROFESSIONALS.map((pro, i) => (
+            <div key={pro.name} data-animate data-animate-delay={String(i + 1) as '1' | '2' | '3'}>
+              <div className="group relative overflow-hidden bg-canvas mb-6">
+                <div className="relative h-80 md:h-96 overflow-hidden">
+                  <img
+                    src={img(pro.photo, 600, 750)}
+                    alt={pro.name}
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-canvas/60 to-transparent" />
+                </div>
+              </div>
+              <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-1.5">{pro.role}</p>
+              <h3 className="font-display text-2xl text-cream mb-1">{pro.name}</h3>
+              <p className="text-muted text-[11px] tracking-wide mb-4">{pro.specialty}</p>
+              <p className="text-warm text-sm leading-relaxed mb-5">{pro.bio}</p>
+              <a href="#agendar" className="text-[10px] tracking-[0.2em] uppercase text-gold border-b border-gold/40 pb-0.5 hover:border-gold transition-colors">
+                Agendar com {pro.name.split(' ')[0]}
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Universo Tria ────────────────────────────────────────────────────────────
+function UniversoSection() {
+  return (
+    <section id="universo" className="py-24 md:py-40 max-w-[1400px] mx-auto px-6 md:px-12">
+      <div data-animate className="mb-14">
+        <SectionLabel>Editorial</SectionLabel>
+        <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05]">
+          O Universo Tria
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5" data-animate data-animate-delay="1">
+        {UNIVERSO.map((item, i) => (
+          <div key={i} className="group relative overflow-hidden bg-panel cursor-pointer">
+            <div className="relative h-64 md:h-80 overflow-hidden">
+              <img
+                src={img(item.photo, 700, 600)}
+                alt={item.title}
+                className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-canvas/80 via-canvas/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-6">
+                <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-2">{item.sub}</p>
+                <h3 className="font-display text-xl md:text-2xl text-cream leading-tight">{item.title}</h3>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─── Diary ────────────────────────────────────────────────────────────────────
+function DiarySection() {
+  return (
+    <section className="py-24 md:py-40 bg-panel border-t border-white/[0.04]">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        <div data-animate className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
+          <div>
+            <SectionLabel>Conteúdo</SectionLabel>
+            <h2 className="font-display text-4xl md:text-[52px] text-cream leading-[1.05]">
+              Diário Tria
+            </h2>
+          </div>
+          <a href="#" className="text-[10px] tracking-[0.2em] uppercase text-gold border-b border-gold/40 pb-1 hover:border-gold transition-colors flex items-center gap-2">
+            Ver tudo <IconArrowRight size={14} />
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-animate data-animate-delay="1">
+          {DIARY.map((item, i) => (
+            <article key={i} className="group cursor-pointer">
+              <div className="relative overflow-hidden bg-canvas mb-5">
+                <div className="h-52 md:h-60 overflow-hidden">
+                  <img
+                    src={img(item.photo, 600, 450)}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                  />
+                </div>
+              </div>
+              <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-3">
+                {item.category} · {item.time} de leitura
+              </p>
+              <h3 className="font-display text-xl text-cream leading-snug group-hover:text-gold transition-colors duration-300">
+                {item.title}
+              </h3>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+function FinalCTASection() {
+  return (
+    <section id="agendar" className="relative py-36 md:py-52 overflow-hidden bg-canvas">
+      <div className="absolute inset-0">
+        <img
+          src={img('1522337360788-8b13dee7a37e', 1600, 900)}
+          alt="Agendar experiência Tria Salon"
+          className="w-full h-full object-cover object-center opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-canvas/60 via-canvas/70 to-canvas/90" />
+      </div>
+
+      <div className="relative max-w-[1400px] mx-auto px-6 md:px-12 text-center">
+        <div data-animate>
+          <SectionLabel>Tria Salon</SectionLabel>
+          <h2 className="font-display text-4xl md:text-[60px] lg:text-[72px] text-cream leading-[1.0] mb-7 max-w-2xl mx-auto">
+            Seu próximo momento<br />
+            <em>pode começar agora.</em>
+          </h2>
+          <p className="text-warm text-lg mb-12 max-w-sm mx-auto leading-relaxed">
+            Reserve sua experiência e deixe o Tria cuidar do seu momento.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="https://wa.me/5521999999999"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-3 text-[10px] tracking-[0.25em] uppercase bg-gold text-canvas px-10 py-4 font-medium hover:bg-gold-light transition-colors duration-300"
+            >
+              <IconWhatsApp size={16} />
+              Agendar experiência
+            </a>
+            <a
+              href="https://wa.me/5521999999999"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-3 text-[10px] tracking-[0.25em] uppercase border border-white/15 text-cream px-10 py-4 hover:border-white/30 transition-colors duration-300"
+            >
+              Falar com o Tria
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function FooterSection() {
+  return (
+    <footer className="bg-canvas border-t border-white/[0.05] py-16 md:py-20">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
+          <div className="col-span-2 md:col-span-1">
+            <p className="font-display text-base tracking-[0.25em] text-cream uppercase mb-5">
+              Tria Salon
+            </p>
+            <p className="text-muted text-sm leading-relaxed">
+              Uma experiência de beleza pensada para quem valoriza o cuidado com intenção e sofisticação.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-5">Localização</p>
+            <div className="flex flex-col gap-2 text-sm text-warm">
+              <span>Rio de Janeiro, RJ</span>
+              <span className="text-muted">Brasil</span>
+            </div>
+            <p className="text-[9px] tracking-[0.3em] uppercase text-gold mt-7 mb-5">Horário</p>
+            <div className="flex flex-col gap-1 text-sm text-warm">
+              <span>Seg – Sex: 9h às 19h</span>
+              <span>Sábado: 9h às 17h</span>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-5">Contato</p>
+            <div className="flex flex-col gap-3">
+              <a
+                href="https://wa.me/5521999999999"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-warm hover:text-cream transition-colors"
+              >
+                <IconWhatsApp size={14} />
+                WhatsApp
+              </a>
+              <a
+                href="https://www.instagram.com/_triasalon/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-warm hover:text-cream transition-colors"
+              >
+                <IconInstagram size={14} />
+                @_triasalon
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[9px] tracking-[0.3em] uppercase text-gold mb-5">Navegação</p>
+            <div className="flex flex-col gap-3">
+              {['Experiências', 'Inspirações', 'Profissionais', 'Universo Tria', 'Diário Tria'].map((item) => (
+                <a
+                  key={item}
+                  href="#"
+                  className="text-sm text-warm hover:text-cream transition-colors"
+                >
+                  {item}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-white/[0.05] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-muted text-[11px]">
+            © {new Date().getFullYear()} Tria Salon. Todos os direitos reservados.
+          </p>
+          <div className="flex gap-6">
+            <a href="#" className="text-muted text-[11px] hover:text-warm transition-colors">Política de Privacidade</a>
+            <a href="#" className="text-muted text-[11px] hover:text-warm transition-colors">Termos de Uso</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+export default function App() {
+  const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 72)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useScrollAnimation()
+
+  return (
+    <div className="bg-canvas text-cream font-sans">
+      <Header scrolled={scrolled} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <HeroSection />
+      <FindMomentSection />
+      <TriaQuizSection />
+      <ExperiencesSection />
+      <WantResultSection />
+      <GallerySection />
+      <ProfessionalsSection />
+      <UniversoSection />
+      <DiarySection />
+      <FinalCTASection />
+      <FooterSection />
+    </div>
+  )
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Offers a premium, interactive digital experience for discovering personalized beauty transformations, connecting inspiration to tailored salon services.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

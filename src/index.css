@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+
+  --color-canvas: #0b0b09;
+  --color-panel: #141411;
+  --color-panel2: #1c1c19;
+  --color-cream: #f0ebe0;
+  --color-warm: #a09080;
+  --color-muted: #6a6050;
+  --color-gold: #c4a882;
+  --color-gold-light: #d4bfa0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0b0b09;
+  color: #f0ebe0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+[data-animate] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-animate].in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+[data-animate-delay='1'] { transition-delay: 0.1s; }
+[data-animate-delay='2'] { transition-delay: 0.2s; }
+[data-animate-delay='3'] { transition-delay: 0.3s; }
+[data-animate-delay='4'] { transition-delay: 0.4s; }
+[data-animate-delay='5'] { transition-delay: 0.5s; }
