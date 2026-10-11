@@ -1,6 +1,6 @@
 import type React from "react"
 import { useState } from "react"
-import { EXPERIENCES, MOMENT_MAP, type MomentId } from "../data"
+import { EXPERIENCES, MOMENT_MAP, MOMENTS, type MomentId } from "../data"
 
 function IconChevronRight({ size = 16 }: { size?: number }) {
   return (
@@ -17,6 +17,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     </p>
   )
 }
+
+const img = (id: string, w = 800, h = 600) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&auto=format&q=80`
+
 
 export default function FindMomentSection() {
   const [selected, setSelected] = useState<MomentId | null>(null)

@@ -308,7 +308,6 @@ function Header({ scrolled, menuOpen, setMenuOpen }: { scrolled: boolean; menuOp
   )
 }
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
 // ─── Find Your Moment ─────────────────────────────────────────────────────────
 function FindMomentSection() {
   const [selected, setSelected] = useState<MomentId | null>(null)
